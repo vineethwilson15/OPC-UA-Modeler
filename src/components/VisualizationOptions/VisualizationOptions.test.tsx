@@ -14,6 +14,7 @@ describe('VisualizationOptions', () => {
   // Two simple nodeset fixtures: one has a namespace, the other none.
   // `prefix` is required to match the production `ParsedNodeset` shape.
   type TestNodeset = { id: string; name: string; namespaces: Array<{ index: number; uri: string; prefix: string }>; nodeCount: number };
+  // Two simple nodeset fixtures: one has a namespace, the other none.
   const nodesets: TestNodeset[] = [
     { id: 'n1', name: 'Nodeset A', namespaces: [{ index: 0, uri: 'urn:a', prefix: 'a' }], nodeCount: 5 },
     { id: 'n2', name: 'Nodeset B', namespaces: [], nodeCount: 2 },

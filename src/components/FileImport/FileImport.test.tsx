@@ -27,9 +27,7 @@ vi.mock('@siemens/ix-react', () => ({
   IxCardContent: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 
-// Helper to flush microtasks so async effects (promises, file reads)
-// settle before assertions. Used after `act` where the component
-// performs asynchronous work such as reading/parsing files.
+// Helper to flush microtasks
 const flushPromises = () => new Promise(setImmediate);
 
 describe('FileImport component', () => {
@@ -38,10 +36,7 @@ describe('FileImport component', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
 
-    // Simple mock `FileReader` used by the component to read dropped
-    // files. In JSDOM the `File` object may implement `.text()`; the
-    // mock prefers that and calls `onload` to simulate successful
-    // reads. This keeps tests synchronous and deterministic.
+    // Simple mock FileReader that immediately yields provided contents
     originalFileReader = (global as unknown as { FileReader?: unknown }).FileReader;
     const MockFileReader = class {
       result: string | null = null;

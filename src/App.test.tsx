@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
@@ -11,12 +11,15 @@ import App from './App';
 // library during tests. Each mock returns a simple DOM element that
 // preserves the important contract used by `App` (props and children).
 vi.mock('@siemens/ix-react', () => ({
-  IxApplication: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  IxApplicationHeader: ({ name, children }: { name?: string; children?: React.ReactNode }) => (
-    <header>{name}{children}</header>
+  // Application shell wrapper
+  IxApplication: (props: React.PropsWithChildren<unknown>) => <div>{props.children}</div>,
+  // Header component: exposes `name` prop and child header controls
+  IxApplicationHeader: (props: { name?: React.ReactNode; children?: React.ReactNode }) => (
+    <header>{props.name}{props.children}</header>
   ),
-  IxIconButton: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => (
-    <button onClick={onClick}>{children}</button>
+  // Icon button: forward onClick and render children so tests can click it
+  IxIconButton: (props: { onClick?: () => void; children?: React.ReactNode }) => (
+    <button onClick={props.onClick}>{props.children}</button>
   ),
 }));
 
@@ -32,12 +35,15 @@ vi.mock('@siemens/ix-icons/icons', () => ({
 //   `data-testid="file-import"` element and reflects the
 //   `isDialogOpen` prop via a `data-open` attribute so tests can
 //   assert dialog open/close state without rendering the full dialog.
-vi.mock('./components/FileImport/FileImport', () => ({
-  __esModule: true,
-  default: React.forwardRef<HTMLDivElement, { isDialogOpen?: boolean }>((props, ref) => (
-    <div ref={ref} data-testid="file-import" data-open={props.isDialogOpen ? 'true' : 'false'} />
-  )),
-}));
+vi.mock('./components/FileImport/FileImport', () => {
+  return {
+    __esModule: true,
+    default: React.forwardRef<HTMLDivElement, { isDialogOpen?: boolean }>((props, ref) => {
+      void ref;
+      return <div data-testid="file-import" data-open={props.isDialogOpen ? 'true' : 'false'} />;
+    }),
+  };
+});
 
 // Stub `NodeTree` — `App` only needs to render it conditionally, so a
 // simple placeholder is sufficient for these high-level tests.
