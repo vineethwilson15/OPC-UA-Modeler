@@ -1,19 +1,32 @@
+import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ParsedNodeset, NodeClass } from '@/types';
+
+// Minimal test node shape used by the tests
+type TestNode = {
+  nodeId: string;
+  displayName: string;
+  browseName: string;
+  nodeClass: NodeClass;
+  description?: string;
+  derivedFrom?: string;
+  valueRank?: number;
+  references: Array<{ referenceType: string; isForward: boolean; targetNodeId: string }>;
+  children?: TestNode[];
+};
 
 // Mock Siemens IX components to simple HTML elements for testing
 vi.mock('@siemens/ix-react', () => ({
-  IxButton: (props: any) => {
-    const { ghost, outline, size, icon, children, ...rest } = props;
-    return <button {...rest}>{children}</button>;
-  },
-  IxCard: (props: any) => <div {...props}>{props.children}</div>,
-  IxCardContent: (props: any) => <div {...props}>{props.children}</div>,
-  IxIcon: (props: any) => <span {...props}>{props.name}</span>,
-  IxIconButton: (props: any) => {
-    const { ghost, size, icon, ...rest } = props;
-    return <button {...rest}>{props.children}</button>;
-  },
+  IxButton: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => (
+    <button onClick={onClick}>{children}</button>
+  ),
+  IxCard: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  IxCardContent: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  IxIcon: ({ name }: { name?: string }) => <span>{name}</span>,
+  IxIconButton: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => (
+    <button onClick={onClick}>{children}</button>
+  ),
 }));
 
 vi.mock('@siemens/ix-icons/icons', () => ({
@@ -28,32 +41,41 @@ describe('DetailPanel component', () => {
   beforeEach(() => {
     // Ensure clipboard mock
     if (!('clipboard' in navigator)) {
-      // @ts-ignore
-      navigator.clipboard = { writeText: vi.fn() };
+      (navigator as unknown as { clipboard?: { writeText: (s: string) => Promise<void> } }).clipboard = {
+        writeText: () => Promise.resolve(),
+      };
     } else {
-      vi.spyOn(navigator.clipboard, 'writeText').mockImplementation(vi.fn() as any);
+      vi.spyOn(navigator.clipboard, 'writeText').mockImplementation(() => Promise.resolve());
     }
   });
 
   it('shows empty state when no node selected', () => {
-    render(<DetailPanel selectedNode={null} nodesetData={{ nodes: new Map() } as any} onNodeSelect={() => {}} />);
+    render(
+      <DetailPanel
+        selectedNode={null}
+        nodesetData={{ nodes: new Map<string, TestNode>() } as unknown as ParsedNodeset}
+        onNodeSelect={() => {}}
+      />
+    );
     expect(screen.getByText('No Node Selected')).toBeDefined();
   });
 
   it('renders basic properties and copies NodeId', () => {
-    const node = {
+    const node: TestNode = {
       nodeId: 'ns=1;i=10',
       displayName: 'My Node',
       browseName: 'MyNode',
-      nodeClass: 'Object',
+      nodeClass: NodeClass.Object,
       description: 'A node',
       references: [],
       children: [],
-    } as any;
+    };
 
-    const nodes = new Map<string, any>([['ns=1;i=10', node]]);
+    const nodes = new Map<string, TestNode>([['ns=1;i=10', node]]);
 
-    render(<DetailPanel selectedNode={node} nodesetData={{ nodes } as any} onNodeSelect={() => {}} />);
+    render(
+      <DetailPanel selectedNode={node} nodesetData={{ nodes } as unknown as ParsedNodeset} onNodeSelect={() => {}} />
+    );
 
     expect(screen.getByText('My Node')).toBeDefined();
     expect(screen.getByText('NodeId')).toBeDefined();
@@ -64,40 +86,43 @@ describe('DetailPanel component', () => {
   });
 
   it('displays valueRank mappings', () => {
-    const node = {
+    const node: TestNode = {
       nodeId: 'ns=1;i=11',
       displayName: 'VR Node',
       browseName: 'VRNode',
-      nodeClass: 'Variable',
+      nodeClass: NodeClass.Variable,
       valueRank: -1,
       references: [],
       children: [],
-    } as any;
+    };
 
-    const nodes = new Map<string, any>([['ns=1;i=11', node]]);
-    render(<DetailPanel selectedNode={node} nodesetData={{ nodes } as any} onNodeSelect={() => {}} />);
+    const nodes = new Map<string, TestNode>([['ns=1;i=11', node]]);
+    render(
+      <DetailPanel selectedNode={node} nodesetData={{ nodes } as unknown as ParsedNodeset} onNodeSelect={() => {}} />
+    );
 
     expect(screen.getByText('-1 (Scalar)')).toBeDefined();
   });
 
   it('lists references and handles clicks for existing targets', () => {
-    const child = { nodeId: 'ns=1;i=20', displayName: 'Child', nodeClass: 'Object', references: [], children: [] } as any;
-    const node = {
+    const child: TestNode = { nodeId: 'ns=1;i=20', displayName: 'Child', browseName: 'Child', nodeClass: NodeClass.Object, references: [], children: [] };
+    const node: TestNode = {
       nodeId: 'ns=1;i=19',
       displayName: 'ParentNode',
-      nodeClass: 'Object',
+      browseName: 'ParentNode',
+      nodeClass: NodeClass.Object,
       references: [
         { referenceType: 'HasComponent', isForward: true, targetNodeId: 'ns=1;i=20' },
         { referenceType: 'HasProperty', isForward: true, targetNodeId: 'ns=1;i=21' },
       ],
       children: [child],
-    } as any;
+    };
 
-    const nodes = new Map<string, any>([['ns=1;i=19', node], ['ns=1;i=20', child]]);
+    const nodes = new Map<string, TestNode>([['ns=1;i=19', node], ['ns=1;i=20', child]]);
 
     const onNodeSelect = vi.fn();
 
-    render(<DetailPanel selectedNode={node} nodesetData={{ nodes } as any} onNodeSelect={onNodeSelect} />);
+    render(<DetailPanel selectedNode={node} nodesetData={{ nodes } as unknown as ParsedNodeset} onNodeSelect={onNodeSelect} />);
 
     // existing target should be clickable
     const childButton = screen.getByRole('button', { name: /Child/i });
@@ -110,14 +135,15 @@ describe('DetailPanel component', () => {
   });
 
   it('shows hierarchy items and allows selecting parent/type/base', () => {
-    const parent = { nodeId: 'ns=1;i=30', displayName: 'Parent', nodeClass: 'Object', references: [], children: [] } as any;
-    const typeDef = { nodeId: 'ns=1;i=31', displayName: 'TypeDef', nodeClass: 'ObjectType', references: [], children: [] } as any;
-    const baseType = { nodeId: 'ns=1;i=32', displayName: 'BaseType', nodeClass: 'ObjectType', references: [], children: [] } as any;
+    const parent: TestNode = { nodeId: 'ns=1;i=30', displayName: 'Parent', browseName: 'Parent', nodeClass: NodeClass.Object, references: [], children: [] };
+    const typeDef: TestNode = { nodeId: 'ns=1;i=31', displayName: 'TypeDef', browseName: 'TypeDef', nodeClass: NodeClass.ObjectType, references: [], children: [] };
+    const baseType: TestNode = { nodeId: 'ns=1;i=32', displayName: 'BaseType', browseName: 'BaseType', nodeClass: NodeClass.ObjectType, references: [], children: [] };
 
-    const node = {
+    const node: TestNode = {
       nodeId: 'ns=1;i=33',
       displayName: 'ChildNode',
-      nodeClass: 'Object',
+      browseName: 'ChildNode',
+      nodeClass: NodeClass.Object,
       references: [
         { referenceType: 'HasComponent', isForward: false, targetNodeId: 'ns=1;i=30' },
         { referenceType: 'HasTypeDefinition', isForward: true, targetNodeId: 'ns=1;i=31' },
@@ -125,9 +151,9 @@ describe('DetailPanel component', () => {
       ],
       derivedFrom: undefined,
       children: [],
-    } as any;
+    };
 
-    const nodes = new Map<string, any>([
+    const nodes = new Map<string, TestNode>([
       ['ns=1;i=30', parent],
       ['ns=1;i=31', typeDef],
       ['ns=1;i=32', baseType],
@@ -135,7 +161,9 @@ describe('DetailPanel component', () => {
     ]);
 
     const onNodeSelect = vi.fn();
-    const { container } = render(<DetailPanel selectedNode={node} nodesetData={{ nodes } as any} onNodeSelect={onNodeSelect} />);
+    const { container } = render(
+      <DetailPanel selectedNode={node} nodesetData={{ nodes } as unknown as ParsedNodeset} onNodeSelect={onNodeSelect} />
+    );
 
     // Parent (use the hierarchy view scope to avoid matching reference links)
     const hierarchyView = container.querySelector('.hierarchy-view') as HTMLElement;
@@ -155,17 +183,18 @@ describe('DetailPanel component', () => {
   });
 
   it('toggles raw data JSON view', () => {
-    const node = {
+    const node: TestNode = {
       nodeId: 'ns=1;i=40',
       displayName: 'RawNode',
-      nodeClass: 'Object',
+      browseName: 'RawNode',
+      nodeClass: NodeClass.Object,
       references: [],
       children: [],
-    } as any;
+    };
 
-    const nodes = new Map<string, any>([['ns=1;i=40', node]]);
+    const nodes = new Map<string, TestNode>([['ns=1;i=40', node]]);
 
-    render(<DetailPanel selectedNode={node} nodesetData={{ nodes } as any} onNodeSelect={() => {}} />);
+    render(<DetailPanel selectedNode={node} nodesetData={{ nodes } as unknown as ParsedNodeset} onNodeSelect={() => {}} />);
 
     // Extended Information section is collapsed by default; expand it first
     const sectionHeader = screen.getByText('Extended Information');

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { fileImportService } from './file-import.service';
 import { nodesetParser } from './nodeset-parser.service';
+import { ParsedNodeset } from '@/types';
 
 describe('FileImportService', () => {
   beforeEach(() => {
@@ -53,9 +54,9 @@ describe('FileImportService', () => {
         fileName: 'm.xml',
         namespaceUri: 'http://example',
         namespaceIndex: 1,
-        nodes: new Map(),
+        nodes: new Map<string, unknown>(),
         rootNodes: [],
-      } as any;
+      } as unknown as ParsedNodeset;
 
       const spy = vi.spyOn(nodesetParser, 'parseNodeset').mockResolvedValue(mockParsed);
       const result = await fileImportService.parseNodesetFile(xml, 'm.xml', []);
@@ -78,7 +79,7 @@ describe('FileImportService', () => {
       const nodeset = {
         nodes: new Map([['ns=1;i=1', { nodeId: 'ns=1;i=1' }]]),
         namespaceUri: 'http://a',
-      } as any;
+      } as unknown as ParsedNodeset;
 
       // Create a File (jsdom provides File in test env)
       const file = new File(['x'], 'test.xml', { type: 'text/xml', lastModified: 12345 });

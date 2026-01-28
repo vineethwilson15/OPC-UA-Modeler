@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 
 import NodeDetails from './NodeDetails';
+import { OpcUaNode } from '@/types';
 
 describe('NodeDetails component', () => {
   it('shows empty state when node is null', () => {
@@ -23,7 +24,7 @@ describe('NodeDetails component', () => {
       derivedFrom: undefined,
       description: undefined,
       references: [],
-    } as any;
+    } as unknown as OpcUaNode;
 
     render(<NodeDetails node={node} />);
 
@@ -46,7 +47,7 @@ describe('NodeDetails component', () => {
       nodeClass: 'Variable',
       valueRank: -1,
       references: [],
-    } as any;
+    } as unknown as OpcUaNode;
 
     render(<NodeDetails node={node} />);
     expect(screen.getByText('-1')).toBeDefined();
@@ -60,7 +61,7 @@ describe('NodeDetails component', () => {
       nodeClass: 'Variable',
       valueRank: 0,
       references: [],
-    } as any;
+    } as unknown as OpcUaNode;
 
     render(<NodeDetails node={node} />);
     expect(screen.getByText('0')).toBeDefined();
@@ -76,7 +77,7 @@ describe('NodeDetails component', () => {
         { referenceType: 'HasComponent', isForward: true, targetNodeId: 'ns=1;i=111' },
         { referenceType: 'HasProperty', isForward: false, targetNodeId: 'ns=1;i=112' },
       ],
-    } as any;
+    } as unknown as OpcUaNode;
 
     render(<NodeDetails node={node} />);
 
@@ -97,7 +98,7 @@ describe('NodeDetails component', () => {
       nodeClass: 'Variable',
       dataType: 'String',
       references: [],
-    } as any;
+    } as unknown as OpcUaNode;
 
     render(<NodeDetails node={node} />);
     expect(screen.getByText('String')).toBeDefined();
@@ -113,7 +114,7 @@ describe('NodeDetails component', () => {
       derivedFrom: 'ns=1;i=302',
       description: 'This is a detailed description',
       references: [],
-    } as any;
+    } as unknown as OpcUaNode;
 
     render(<NodeDetails node={node} />);
 
@@ -134,7 +135,7 @@ describe('NodeDetails component', () => {
       derivedFrom: 'ns=1;i=402',
       description: 'Label description',
       references: [],
-    } as any;
+    } as unknown as OpcUaNode;
 
     render(<NodeDetails node={node} />);
 
@@ -161,7 +162,7 @@ describe('NodeDetails component', () => {
         { referenceType: 'RefB', isForward: true, targetNodeId: 'ns=1;i=502' },
         { referenceType: 'RefC', isForward: false, targetNodeId: 'ns=1;i=503' },
       ],
-    } as any;
+    } as unknown as OpcUaNode;
 
     render(<NodeDetails node={node} />);
 
@@ -184,7 +185,7 @@ describe('NodeDetails component', () => {
       derivedFrom: '',
       description: '',
       references: [],
-    } as any;
+    } as unknown as OpcUaNode;
 
     render(<NodeDetails node={node} />);
 
