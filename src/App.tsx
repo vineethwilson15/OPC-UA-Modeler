@@ -2,19 +2,24 @@ import {
   IxApplication,
   IxApplicationHeader,
   IxIconButton, IxButton,
-  IxContent,
+  IxLayoutGrid, IxRow, IxCol,
   IxMenu,
   IxMenuAbout,
   IxMenuSettings,
+  IxEmptyState,
+  IxPane,
+  IxPaneLayout,
   showModal
+
 } from '@siemens/ix-react';
 import { AppSwitchConfiguration } from '@siemens/ix';
 import { useState, useEffect } from 'react';
 import {
-  iconCloudUpload, iconClear, iconPrint, iconMoon, iconSun
+  iconCloudUpload, iconClear, iconPrint, iconMoon, iconSun, iconTable, iconTree
 } from '@siemens/ix-icons/icons';
 import FileImportModal from './components/FileImport/FileImport';
 import NodeTree from './components/NodeTree/NodeTree';
+import NodeGrid from './components/NodeGrid/NodeGrid';
 import DetailPanel from './components/DetailPanel/DetailPanel';
 import { OpcUaNode, OpcUaNodeset, ImportError, NamespaceConflictStrategy } from '@/types';
 import './App.css';
@@ -24,15 +29,21 @@ function App() {
   const [activeNodeset, setActiveNodeset] = useState<OpcUaNodeset | null>(null);
   const [selectedNode, setSelectedNode] = useState<OpcUaNode | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [viewMode, setViewMode] = useState<'tree' | 'grid'>('tree');
+
+  const [variant] = useState<'inline' | 'floating'>('floating');
+  const [layout] = useState<'full-horizontal' | 'full-vertical'>(
+    'full-horizontal'
+  );
 
   useEffect(() => {
     // Initialize theme from localStorage or system preference
     const htmlElement = document.querySelector('html');
     if (!htmlElement) return;
-    
+
     // Set the theme to classic
     htmlElement.setAttribute('data-ix-theme', 'classic');
-    
+
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (savedTheme) {
       setTheme(savedTheme);
@@ -65,6 +76,12 @@ function App() {
   const handleImportError = (error: ImportError) => {
     console.error('Import error:', error);
   };
+
+  const handleClearNodeset = () => {
+    setActiveNodeset(null);
+    setSelectedNode(null);
+    setNodesets([]);
+  };
   const appSwitchConfig: AppSwitchConfiguration = {
     i18nAppSwitch: 'Switch to Application',
     currentAppId: 'app-1',
@@ -88,7 +105,7 @@ function App() {
     ],
   };
 
-  const openImportDialog = async () => {
+    const openImportDialog = async () => {
     await showModal({
       size: '600',
       content: (
@@ -100,6 +117,8 @@ function App() {
       ),
     });
   };
+
+
 
   return (
     <IxApplication appSwitchConfig={appSwitchConfig}>
@@ -127,9 +146,19 @@ function App() {
             Upload
           </IxIconButton>
           <IxIconButton
+            icon={viewMode === 'tree' ? iconTable : iconTree}
+            onClick={() => setViewMode(viewMode === 'tree' ? 'grid' : 'tree')}
+            disabled={!activeNodeset}
+            oval
+            variant="subtle-tertiary"
+            title={`Switch to ${viewMode === 'tree' ? 'Grid' : 'Tree'} View`}
+            aria-label="Toggle view mode"
+          >
+            {viewMode === 'tree' ? 'Grid' : 'Tree'}
+          </IxIconButton>
+          <IxIconButton
             icon={iconPrint}
             disabled
-            onClick={() => setIsImportDialogOpen(true)}
             oval
             variant="subtle-tertiary"
             title="Print Nodeset"
@@ -139,12 +168,10 @@ function App() {
           </IxIconButton>
           <IxIconButton
             icon={iconClear}
-            onClick={() => {
-              setActiveNodeset(null);
-              setSelectedNode(null);
-            }}
+            onClick={handleClearNodeset}
+            disabled={!activeNodeset}
             oval
-            variant="subtle-tertiary"
+            variant="danger-tertiary"
             title="Clear Viewer"
             aria-label="Clear viewer"
           >
@@ -156,28 +183,90 @@ function App() {
         <IxMenuSettings></IxMenuSettings>
         <IxMenuAbout></IxMenuAbout>
       </IxMenu>
-      <IxContent>
-        <div className="app-content">
-          {activeNodeset ? (
-            <div className="workspace">
-              <NodeTree
-                nodesetData={activeNodeset}
-                onNodeSelect={setSelectedNode}
-                selectedNodeId={selectedNode?.nodeId}
-              />
-              <DetailPanel
-                selectedNode={selectedNode}
-                nodesetData={activeNodeset}
-                onNodeSelect={setSelectedNode}
-              />
-            </div>
-          ) : (
-            <div className="empty-workspace">
-              <p>No nodeset loaded yet.</p>
-            </div>
-          )}
-        </div>
-      </IxContent>
+      <div>
+        {activeNodeset ? (
+          <div className="app-content">
+            <IxPaneLayout
+              variant={variant}
+              layout={layout}
+              borderless={variant === 'floating'}
+            >
+              <IxPane heading="Nodeset Information" slot="bottom" size="33%">
+                <div className="nodeset-info-container">
+                  <div className="nodeset-info-grid">
+                    <div>
+                      <strong>File Name:</strong>
+                      <p>{activeNodeset.fileName}</p>
+                    </div>
+                    <div>
+                      <strong>Namespace URI:</strong>
+                      <p className="nodeset-info-uri">{activeNodeset.namespaceUri}</p>
+                    </div>
+                    <div>
+                      <strong>Namespace Index:</strong>
+                      <p>{activeNodeset.namespaceIndex}</p>
+                    </div>
+                    <div>
+                      <strong>Total Nodes:</strong>
+                      <p>{activeNodeset.nodes.size}</p>
+                    </div>
+                    <div>
+                      <strong>Root Nodes:</strong>
+                      <p>{activeNodeset.rootNodes.length}</p>
+                    </div>
+                  </div>
+                </div>
+              </IxPane>
+
+              <div className="app-main-content">
+                <IxLayoutGrid noMargin>
+                  <IxRow>
+                    <IxCol size={viewMode === 'tree' ? "7" : "12"}>
+                      <div className="column-scroll-container">
+                        {viewMode === 'tree' ? (
+                          <NodeTree
+                            nodesetData={activeNodeset}
+                            onNodeSelect={setSelectedNode}
+                            selectedNodeId={selectedNode?.nodeId}
+                          />
+                        ) : (
+                          <NodeGrid
+                            nodesetData={activeNodeset}
+                            onNodeSelect={setSelectedNode}
+                            selectedNodeId={selectedNode?.nodeId}
+                          />
+                        )}
+                      </div>
+                    </IxCol>
+                    {viewMode === 'tree' && (
+                      <IxCol size="5">
+                        <div className="column-scroll-container">
+                          <DetailPanel
+                            selectedNode={selectedNode}
+                            nodesetData={activeNodeset}
+                            onNodeSelect={setSelectedNode}
+                          />
+                        </div>
+                      </IxCol>
+                    )}
+                  </IxRow>
+                </IxLayoutGrid>
+
+              </div>
+            </IxPaneLayout>
+
+          </div>
+        ) : (
+          <IxEmptyState
+            header="No nodeset loaded"
+            subHeader="Upload a nodeset file to start viewing and analyzing OPC UA information models"
+            icon={iconCloudUpload}
+            action="Upload nodeset"
+            onActionClick={openImportDialog}
+          />
+        )}
+      </div>
+
     </IxApplication>
   );
 }

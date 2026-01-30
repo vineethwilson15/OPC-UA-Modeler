@@ -1,6 +1,20 @@
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeAll } from 'vitest';
+import { afterEach, beforeAll, vi } from 'vitest';
+
+// Mock @siemens/ix to avoid loading next.js package
+vi.mock('@siemens/ix', async () => {
+  const actual = await vi.importActual('@siemens/ix');
+  return {
+    ...actual,
+    UploadFileState: {
+      UPLOAD_PENDING: 'upload-pending',
+      UPLOAD_FINISHED: 'upload-finished',
+      UPLOAD_FAILED: 'upload-failed',
+      UPLOAD_SUCCEDED: 'upload-succeded',
+    },
+  };
+});
 
 // Mock scrollIntoView for jsdom
 beforeAll(() => {

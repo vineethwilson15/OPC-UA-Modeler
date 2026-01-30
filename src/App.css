@@ -1,27 +1,20 @@
+html {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
 .app-content {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 64px);
-  padding: 1rem;
+  height: calc(100vh - 48px);
   overflow: auto;
   background-color: var(--theme-color-std-bkg);
-}
-
-.workspace {
-  display: grid;
-  grid-template-columns: minmax(280px, 1.2fr) minmax(280px, 0.8fr);
-  gap: 1rem;
-  margin-top: 1rem;
-  align-items: start;
-}
-
-.empty-workspace {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px dashed var(--theme-color-soft-bdr);
-  border-radius: 8px;
-  color: var(--theme-color-soft-text);
-  text-align: center;
 }
 
 .placeholder-logo {
@@ -34,4 +27,27 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
+}
+
+.nodeset-info-container {
+  padding: 1rem;
+}
+
+.nodeset-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.nodeset-info-uri {
+  word-break: break-all;
+}
+
+.column-scroll-container {
+  height: calc(100vh - 90px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.app-main-content ix-layout-grid ix-col {
+  padding: 0;
 }

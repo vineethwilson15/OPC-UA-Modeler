@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { IxButton, IxCard, IxCardContent, IxIcon, IxIconButton, IxBlind, IxTypography } from '@siemens/ix-react';
-import { iconCopy, iconChevronRight } from '@siemens/ix-icons/icons';
+import { IxButton, IxIcon, IxIconButton, IxEmptyState } from '@siemens/ix-react';
+import { iconCopy, iconChevronDown, iconChevronRight } from '@siemens/ix-icons/icons';
 import { OpcUaNode, ParsedNodeset } from '@/types';
 import './DetailPanel.css';
 
@@ -17,17 +17,16 @@ interface PropertySectionProps {
 }
 
 function PropertySection({ title, children, defaultExpanded = true }: PropertySectionProps) {
-  const [isCollapsed, setIsCollapsed] = useState(!defaultExpanded);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <IxBlind
-      label={title}
-      collapsed={isCollapsed}
-      onCollapsedChange={(e) => setIsCollapsed(e.detail)}
-      variant="outline"
-    >
-      <div className="section-content">{children}</div>
-    </IxBlind>
+    <div className="property-section">
+      <div className="section-header" onClick={() => setIsExpanded(!isExpanded)}>
+        <IxIcon name={isExpanded ? iconChevronDown : iconChevronRight} size="16" />
+        <h4>{title}</h4>
+      </div>
+      {isExpanded && <div className="section-content">{children}</div>}
+    </div>
   );
 }
 
@@ -226,16 +225,15 @@ function HierarchyView({ node, nodesetData, onNodeSelect }: HierarchyViewProps) 
 
 function EmptyState() {
   return (
-    <div className="detail-panel empty-state-container">
-      <IxCard>
-        <IxCardContent>
-          <div className="empty-state-content">
-            <IxIcon name="info" size="32" />
-            <h3>No Node Selected</h3>
-            <p>Select a node from the tree to view its details</p>
-          </div>
-        </IxCardContent>
-      </IxCard>
+    <div className="detail-panel">
+      <h3 className="panel-title">Node Details</h3>
+      <div className="empty-state-container">
+        <IxEmptyState
+          header="No node selected"
+          subHeader="Select a node from the tree to view its details"
+          icon="info"
+        />
+      </div>
     </div>
   );
 }
@@ -271,21 +269,22 @@ function DetailPanel({ selectedNode, nodesetData, onNodeSelect }: DetailPanelPro
 
   return (
     <div className="detail-panel">
-      {/* Header Section */}
-      <div className="detail-header">
+      <h3 className="panel-title">Node Details</h3>
+      <div className="detail-panel-content">
+        {/* Header Section */}
+        <div className="detail-header">
         <div className="detail-title-section">
-          <IxTypography className="detail-title">{selectedNode.displayName}</IxTypography>
+          <h2 className="detail-title">{selectedNode.displayName}</h2>
           <span className={getNodeClassBadgeClass(selectedNode.nodeClass)}>
             {selectedNode.nodeClass}
           </span>
         </div>
         <div className="detail-actions">
-          <IxButton icon={iconCopy} variant="tertiary" onClick={() => {
+          <IxButton variant="subtle-primary" onClick={() => {
             navigator.clipboard.writeText(selectedNode.nodeId);
           }}>
-            
+            <IxIcon name={iconCopy} size="16" />
             Copy NodeId
-
           </IxButton>
         </div>
       </div>
@@ -371,6 +370,7 @@ function DetailPanel({ selectedNode, nodesetData, onNodeSelect }: DetailPanelPro
           )}
         </div>
       </PropertySection>
+      </div>
     </div>
   );
 }

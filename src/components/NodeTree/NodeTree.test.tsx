@@ -4,6 +4,18 @@ import userEvent from '@testing-library/user-event';
 import NodeTree from './NodeTree';
 import { OpcUaNode, NodeClass, ParsedNodeset } from '../../types/opcua.types';
 
+// Mock IX components
+vi.mock('@siemens/ix-react', () => ({
+  IxIconButton: ({ children, onClick, icon, title }: { children?: React.ReactNode; onClick?: () => void; icon?: string; title?: string }) => (
+    <button onClick={onClick} data-icon={icon} aria-label={title} title={title}>{children}</button>
+  ),
+}));
+
+vi.mock('@siemens/ix-icons/icons', () => ({
+  iconExpandAll: 'iconExpandAll',
+  iconCollapseAll: 'iconCollapseAll',
+}));
+
 // Mock data for testing
 const createMockNode = (
   id: string,
@@ -161,7 +173,7 @@ describe('NodeTree Component', () => {
       const user = userEvent.setup();
       render(<NodeTree nodesetData={mockNodeset} onNodeSelect={mockOnNodeSelect} />);
       
-      const expandAllButton = screen.getByText('Expand All');
+      const expandAllButton = screen.getByRole('button', { name: 'Expand All' });
       await user.click(expandAllButton);
       
       // All nodes should be visible
@@ -178,11 +190,11 @@ describe('NodeTree Component', () => {
       render(<NodeTree nodesetData={mockNodeset} onNodeSelect={mockOnNodeSelect} />);
       
       // First expand all
-      await user.click(screen.getByText('Expand All'));
+      await user.click(screen.getByRole('button', { name: 'Expand All' }));
       expect(screen.getByText('Server')).toBeInTheDocument();
       
       // Then collapse all
-      await user.click(screen.getByText('Collapse All'));
+      await user.click(screen.getByRole('button', { name: 'Collapse All' }));
       expect(screen.queryByText('Server')).not.toBeInTheDocument();
       expect(screen.queryByText('Device')).not.toBeInTheDocument();
     });
@@ -358,7 +370,7 @@ describe('NodeTree Component', () => {
       treeContainer.focus();
       
       // Expand first to make nodes visible
-      await userEvent.click(screen.getByText('Expand All'));
+      await userEvent.click(screen.getByRole('button', { name: 'Expand All' }));
       
       // Press ArrowDown
       fireEvent.keyDown(treeContainer, { key: 'ArrowDown' });
@@ -372,8 +384,8 @@ describe('NodeTree Component', () => {
       render(<NodeTree nodesetData={mockNodeset} onNodeSelect={mockOnNodeSelect} />);
       
       const treeContainer = document.querySelector('.tree-container') as HTMLElement;
-      await userEvent.click(screen.getByText('Expand All'));
-      
+      await userEvent.click(screen.getByRole('button', { name: 'Expand All' }));
+
       // Navigate down first
       fireEvent.keyDown(treeContainer, { key: 'ArrowDown' });
       fireEvent.keyDown(treeContainer, { key: 'ArrowDown' });
@@ -408,7 +420,7 @@ describe('NodeTree Component', () => {
       const treeContainer = document.querySelector('.tree-container') as HTMLElement;
       
       // Expand first
-      await userEvent.click(screen.getByText('Expand All'));
+      await userEvent.click(screen.getByRole('button', { name: 'Expand All' }));
       expect(screen.getByText('Server')).toBeInTheDocument();
       
       // Press ArrowLeft to collapse

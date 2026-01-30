@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { OpcUaNode, NodeClass, ParsedNodeset } from '../../types/opcua.types';
 import './NodeTree.css';
-import { IxButton } from '@siemens/ix-react';
+import { IxIconButton } from '@siemens/ix-react';
+import { iconExpandAll, iconCollapseAll } from '@siemens/ix-icons/icons';
 
 interface NodeTreeProps {
   nodesetData: ParsedNodeset;
@@ -302,14 +303,14 @@ function NodeTree({
         aria-label="Search nodes"
       />
       {searchText && (
-        <IxButton
+        <button
           className="tree-search-clear"
           onClick={() => setSearchText('')}
           title="Clear search"
           aria-label="Clear search"
         >
           ✕
-        </IxButton>
+        </button>
       )}
     </div>
   );
@@ -320,7 +321,7 @@ function NodeTree({
       <div className="tree-filter-label">Filter by type:</div>
       <div className="tree-filter-buttons">
         {Object.values(NodeClass).map((nodeClass) => (
-          <IxButton
+          <button
             key={nodeClass}
             className={`tree-filter-button ${selectedNodeTypes.has(nodeClass) ? 'active' : ''}`}
             onClick={() => toggleNodeType(nodeClass)}
@@ -328,7 +329,7 @@ function NodeTree({
             aria-pressed={selectedNodeTypes.has(nodeClass)}
           >
             {getNodeIcon(nodeClass)} {nodeClass}
-          </IxButton>
+          </button>
         ))}
       </div>
     </div>
@@ -336,17 +337,15 @@ function NodeTree({
 
   return (
     <div className="node-tree" role="tree" aria-label="OPC UA Node Tree">
+      <h3 className="panel-title">Uploaded Nodeset: {nodesetData.fileName}</h3>
+      
       <SearchBar />
       <TypeFilter />
 
       {/* Toolbar */}
       <div className="tree-toolbar">
-        <button className="tree-toolbar-button" onClick={expandAll}>
-          Expand All
-        </button>
-        <button className="tree-toolbar-button" onClick={collapseAll}>
-          Collapse All
-        </button>
+         <IxIconButton icon={iconExpandAll} variant="subtle-tertiary" onClick={expandAll} title='Expand All'></IxIconButton>
+         <IxIconButton icon={iconCollapseAll} variant="subtle-tertiary" onClick={collapseAll} title='Collapse All'></IxIconButton>
         <span className="tree-node-count">
           Showing {getTotalNodeCount()} node{getTotalNodeCount() !== 1 ? 's' : ''}
         </span>

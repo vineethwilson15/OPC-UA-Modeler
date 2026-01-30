@@ -1,8 +1,25 @@
 .detail-panel {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--theme-color-component-1);
+}
+
+.panel-title {
+  margin: 0;
+  padding: 1rem 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--theme-color-std-text);
+  border-bottom: 1px solid var(--theme-color-component-5);
+  background-color: var(--theme-color-component-1);
+  flex-shrink: 0;
+}
+
+.detail-panel-content {
   overflow-y: auto;
   padding: 1.5rem;
-  background-color: var(--theme-color-component-1);
+  flex: 1;
 }
 
 /* Header Section */
@@ -92,7 +109,37 @@
   border: 1px solid rgba(253, 126, 20, 0.3);
 }
 
-/* Property Sections with IxBlind */
+/* Property Sections */
+.property-section {
+  margin-bottom: 1.5rem;
+  background-color: var(--theme-color-component-2);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--theme-color-component-5);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--theme-color-component-3);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.section-header:hover {
+  background-color: var(--theme-color-component-4);
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--theme-color-std-text);
+}
+
 ix-blind {
   margin-bottom: 1rem;
 }
@@ -314,7 +361,7 @@ ix-blind {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  flex: 1;
   padding: 2rem;
 }
 

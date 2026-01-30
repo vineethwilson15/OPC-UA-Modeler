@@ -2,6 +2,7 @@ import * as React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
+import { showModal } from '@siemens/ix-react';
 
 // Tests for the top-level `App` component.
 // Purpose: verify the header renders, the upload control is present,
@@ -36,6 +37,22 @@ vi.mock('@siemens/ix-react', () => ({
   IxMenuAbout: () => <div data-testid="menu-about" />,
   // Content components
   IxContent: (props: React.PropsWithChildren<unknown>) => <main>{props.children}</main>,
+  // Layout components
+  IxLayoutGrid: (props: React.PropsWithChildren<unknown>) => <div>{props.children}</div>,
+  IxRow: (props: React.PropsWithChildren<unknown>) => <div>{props.children}</div>,
+  IxCol: (props: React.PropsWithChildren<unknown>) => <div>{props.children}</div>,
+  IxPane: (props: React.PropsWithChildren<unknown>) => <div>{props.children}</div>,
+  IxPaneLayout: (props: React.PropsWithChildren<unknown>) => <div>{props.children}</div>,
+  // Empty state component
+  IxEmptyState: (props: { header?: string; subHeader?: string; action?: string; onActionClick?: () => void }) => (
+    <div>
+      <h2>{props.header}</h2>
+      <p>{props.subHeader}</p>
+      {props.action && <button onClick={props.onActionClick}>{props.action}</button>}
+    </div>
+  ),
+  // Modal utilities
+  showModal: vi.fn(),
 }));
 
 // Mock icon module used by the header. We don't need the actual icon
@@ -46,6 +63,8 @@ vi.mock('@siemens/ix-icons/icons', () => ({
   iconPrint: 'iconPrint',
   iconMoon: 'iconMoon',
   iconSun: 'iconSun',
+  iconTable: 'iconTable',
+  iconTree: 'iconTree',
 }));
 
 // Mock child components used by `App`.
@@ -87,23 +106,21 @@ describe('App component', () => {
     // Smoke test: ensure top-level header text and the Upload button are present
     render(<App />);
     expect(screen.getByText('OPC UA Web Modeler')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Upload/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Upload' })).toBeTruthy();
   });
 
   it('shows empty workspace text when no nodeset loaded', () => {
     // With no nodeset provided, App should render the empty-workspace message
     render(<App />);
-    expect(screen.getByText('No nodeset loaded yet.')).toBeTruthy();
+    expect(screen.getByText('No nodeset loaded')).toBeTruthy();
   });
 
   it('opens import dialog when Upload button is clicked', () => {
-    // Clicking the Upload button should set `isDialogOpen` on the mocked
-    // `FileImport` component. We assert this by reading the
-    // `data-open` attribute rendered by the mock.
+    // Clicking the Upload button should call showModal
     render(<App />);
-    const btn = screen.getByRole('button', { name: /Upload/i });
+    const btn = screen.getByRole('button', { name: 'Upload nodeset' });
     fireEvent.click(btn);
-    const fi = screen.getByTestId('file-import');
-    expect(fi.getAttribute('data-open')).toBe('true');
+    // Verify showModal was called
+    expect(showModal).toHaveBeenCalled();
   });
 });

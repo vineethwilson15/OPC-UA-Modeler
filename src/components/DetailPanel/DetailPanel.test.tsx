@@ -27,6 +27,12 @@ vi.mock('@siemens/ix-react', () => ({
   IxIconButton: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => (
     <button onClick={onClick}>{children}</button>
   ),
+  IxEmptyState: ({ header, subHeader }: { header?: string; subHeader?: string }) => (
+    <div>
+      <h2>{header}</h2>
+      <p>{subHeader}</p>
+    </div>
+  ),
 }));
 
 vi.mock('@siemens/ix-icons/icons', () => ({
@@ -57,7 +63,7 @@ describe('DetailPanel component', () => {
         onNodeSelect={() => {}}
       />
     );
-    expect(screen.getByText('No Node Selected')).toBeDefined();
+    expect(screen.getByText('No node selected')).toBeDefined();
   });
 
   it('renders basic properties and copies NodeId', () => {
